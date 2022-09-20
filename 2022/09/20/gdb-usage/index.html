@@ -1,0 +1,484 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>gdb使用技巧 | wakaka</title><meta name="keywords" content="gdb,c,debug"><meta name="author" content="wakaka"><meta name="copyright" content="wakaka"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="GDB调试工具0x00 介绍gdb是用来debug c&#x2F;c++程序的工具，用来检测程序的逻辑错误 要想使用必须在gcc编译的时候加上-g选项 加了-g之后会生成调试表    GDB的三种调试方式如下:    运行并调试一个新进程:   运行GDB, 并通过命令行或 file命令指定目标程序; 输入run命令, GDB将进行以下操作:   通过 fork() 系统调用创建一个子进程; 在新创建的子进">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gdb使用技巧">
+<meta property="og:url" content="https://wakaka6.github.io/2022/09/20/gdb-usage/index.html">
+<meta property="og:site_name" content="wakaka">
+<meta property="og:description" content="GDB调试工具0x00 介绍gdb是用来debug c&#x2F;c++程序的工具，用来检测程序的逻辑错误 要想使用必须在gcc编译的时候加上-g选项 加了-g之后会生成调试表    GDB的三种调试方式如下:    运行并调试一个新进程:   运行GDB, 并通过命令行或 file命令指定目标程序; 输入run命令, GDB将进行以下操作:   通过 fork() 系统调用创建一个子进程; 在新创建的子进">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://wakaka6.github.io/img/page/3.jpg">
+<meta property="article:published_time" content="2022-09-20T15:05:06.000Z">
+<meta property="article:modified_time" content="2022-09-20T15:08:21.445Z">
+<meta property="article:author" content="wakaka">
+<meta property="article:tag" content="gdb">
+<meta property="article:tag" content="c">
+<meta property="article:tag" content="debug">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://wakaka6.github.io/img/page/3.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://wakaka6.github.io/2022/09/20/gdb-usage/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'gdb使用技巧',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-09-20 23:08:21'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://avatars.githubusercontent.com/u/48764488" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a></div></div></div><hr/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/page/3.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">wakaka</a></span><div id="menus"><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">gdb使用技巧</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-09-20T15:05:06.000Z" title="发表于 2022-09-20 23:05:06">2022-09-20</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-09-20T15:08:21.445Z" title="更新于 2022-09-20 23:08:21">2022-09-20</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="gdb使用技巧"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="GDB调试工具"><a href="#GDB调试工具" class="headerlink" title="GDB调试工具"></a>GDB调试工具</h2><h3 id="0x00-介绍"><a href="#0x00-介绍" class="headerlink" title="0x00 介绍"></a>0x00 介绍</h3><p>gdb是用来debug c/c++程序的工具，用来检测程序的逻辑错误 <br>要想使用必须在gcc编译的时候加上<code>-g</code>选项 <br>加了<code>-g</code>之后会生成调试表   </p>
+<p>GDB的三种调试方式如下:  </p>
+<ol>
+<li>运行并调试一个新进程:  <ul>
+<li>运行GDB, 并通过命令行或 <code>file</code>命令指定目标程序;</li>
+<li>输入<code>run</code>命令, GDB将进行以下操作:  <ul>
+<li>通过 <code>fork()</code> 系统调用创建一个子进程;</li>
+<li>在新创建的子进程中执行操作<code>ptrace(PTRACE_TRACEME, 0, 0, 0)</code>;</li>
+<li>在子进程中通过<code>execv()</code>系统调用加载用户指定的可执行文件。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>attach</strong> 并调试一个已经运行的进程:  <ul>
+<li>用户确定需要进行调试的进程PID</li>
+<li>运行GDB， 输入 <code>attach &lt;pid&gt;</code>, 或者<code>gdb -p &lt;pid&gt;</code> </li>
+<li>GDB会对其执行操作<code>ptrace(PTRACE_ATTACH, 0, 0, 0)</code>;</li>
+</ul>
+</li>
+<li>远程调试目标机上新创建的进程:  <ul>
+<li>gdb 运行在调试机上，gdbserver 运行在被调试机上，两者之间的通信数据格式为GDB串行协议(Remote Serial Protocol)定义;</li>
+<li>RSP协议数据基本格式为 <code>$..........#xx</code>;</li>
+<li>gdbserver的启动方式相当于第一种GDB调试方式.</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>note:<br>GDB attach到一个进程时，可能会出现权限问题</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gef➤  attach 1</span><br><span class="line">Attaching to process 1</span><br><span class="line">ptrace: Operation not permitted.</span><br></pre></td></tr></table></figure>
+<p>这是由于内核参数 <code>ptrace_scope=1</code> 被设置了，因此普通用户没有权限对其他进程进行 attach 操作，而 root 权限启动GDB不会受权限所限制，但更好的解决方案是关闭它:  </p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">╰──➤ cat /proc/sys/kernel/yama/ptrace_scope</span><br><span class="line">1</span><br><span class="line">╰──➤ sudo <span class="built_in">echo</span> 0 &gt; /proc/sys/kernel/yama/ptrace_scope  <span class="comment"># 临时</span></span><br><span class="line">╰──➤ sudo <span class="built_in">echo</span> <span class="string">&quot;kernel.yama.ptrace_scope = 0&quot;</span> &gt; /etc/sysctl.d/10-ptrace.conf  <span class="comment"># 永久</span></span><br></pre></td></tr></table></figure>
+<h3 id="0x01-gdb简单使用"><a href="#0x01-gdb简单使用" class="headerlink" title="0x01 gdb简单使用"></a>0x01 gdb简单使用</h3><p>e.g. 调试hello程序的步骤  </p>
+<ol>
+<li><p>编译生成ELF文件 并加上<code>-g</code> 选项</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc hello.c -o hello -g</span><br></pre></td></tr></table></figure></li>
+<li><p>使用gdb进行调试</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gdb hello</span><br><span class="line"><span class="comment">## 或者使用tui界面的gdb</span></span><br><span class="line">gdb -tui hello</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>note: 若编译时忘记加<code>-g</code> 选项而且已经在gdb中打开了一个程序，可以重新编译之后在用<code>file</code> 命令加载可执行程序</p>
+<p>gdb中常用命令如下表  </p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>简写</th>
+<th>作用</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>help</td>
+<td>h</td>
+<td>按模块列出命令类</td>
+<td></td>
+</tr>
+<tr>
+<td>help class</td>
+<td></td>
+<td>查看某一类型的具体命令</td>
+<td></td>
+</tr>
+<tr>
+<td>list</td>
+<td>l</td>
+<td>查看代码，可跟行号或函数名</td>
+<td></td>
+</tr>
+<tr>
+<td>quit</td>
+<td>q</td>
+<td>退出gdb</td>
+<td></td>
+</tr>
+<tr>
+<td>run</td>
+<td>r</td>
+<td>全速运行程序</td>
+<td></td>
+</tr>
+<tr>
+<td>run arg[1] arg[2]</td>
+<td></td>
+<td>调试时命令行传参</td>
+<td>run aa bb cc</td>
+</tr>
+<tr>
+<td>start</td>
+<td></td>
+<td>单步执行，运行程序，停在第一行执行语句</td>
+<td></td>
+</tr>
+<tr>
+<td>next</td>
+<td>n</td>
+<td>逐过程执行代码，跳到下一行代码继续执行</td>
+<td></td>
+</tr>
+<tr>
+<td>nexti</td>
+<td>ni</td>
+<td>逐过程执行机器指令，跳到下一行代码继续执行</td>
+<td></td>
+</tr>
+<tr>
+<td>step</td>
+<td>s</td>
+<td>逐语句执行代码，遇见函数，跳到函数内执行</td>
+<td></td>
+</tr>
+<tr>
+<td>stepi</td>
+<td>si</td>
+<td>逐语句执行机器指令，遇见函数，跳到函数内执行</td>
+<td></td>
+</tr>
+<tr>
+<td>backtrace</td>
+<td>bt</td>
+<td>查看函数的调用栈帧和层级关系</td>
+<td></td>
+</tr>
+<tr>
+<td>info</td>
+<td>i</td>
+<td>查看GDB内部局部变量的的数值</td>
+<td><code>info breakpoints</code> //(可以简写成 i b)  查看断点信息表<br><code>info locals</code> //查看局部变量<br></td>
+</tr>
+<tr>
+<td>frame</td>
+<td>f</td>
+<td>切换函数的栈帧</td>
+<td></td>
+</tr>
+<tr>
+<td>finish</td>
+<td>fin</td>
+<td>跳出当前循环（跳出当前栈）</td>
+<td></td>
+</tr>
+<tr>
+<td>util <num></td>
+<td></td>
+<td>运行到指定行结束</td>
+<td></td>
+</tr>
+<tr>
+<td>return <value></td>
+<td></td>
+<td>结束当前函数，返回到函数调用点, 并决定返回值</td>
+<td><code>return 233</code></td>
+</tr>
+<tr>
+<td>set</td>
+<td></td>
+<td>设置变量的值</td>
+<td>set var n=100</td>
+</tr>
+<tr>
+<td>set args</td>
+<td></td>
+<td>设置main函数的参数值（在start、run之前）</td>
+<td>set args aa bb cc</td>
+</tr>
+<tr>
+<td>print</td>
+<td>p</td>
+<td>打印变量和地址</td>
+<td><code>p *数组名 @10</code> // 列出数组前10个元素<br><code>p 数组名[n] @m</code>// 从下标n开始向后打印m个元素</td>
+</tr>
+<tr>
+<td>print type</td>
+<td>ptype</td>
+<td>查看变量的类型</td>
+<td></td>
+</tr>
+<tr>
+<td>break</td>
+<td>b</td>
+<td>设置断点，可根据行号和函数名</td>
+<td><code>b 20 if i = 5</code> 设置条件断点<br><code>break * 0x1234</code> 在地址0x1234处设置断点</td>
+</tr>
+<tr>
+<td>delete</td>
+<td>d</td>
+<td>删除断点</td>
+<td>d breakpoints NUM</td>
+</tr>
+<tr>
+<td>display</td>
+<td></td>
+<td>设置观察变量</td>
+<td>display testvar</td>
+</tr>
+<tr>
+<td>undisplay</td>
+<td></td>
+<td>取消观察变量</td>
+<td>undisplay 观察变量的编号</td>
+</tr>
+<tr>
+<td>continue</td>
+<td>c</td>
+<td>继续全速运行剩下的代码</td>
+<td></td>
+</tr>
+<tr>
+<td>enable breakpoints</td>
+<td></td>
+<td>启用断点</td>
+<td></td>
+</tr>
+<tr>
+<td>disable breakpoints</td>
+<td></td>
+<td>禁用断点</td>
+<td></td>
+</tr>
+<tr>
+<td>x</td>
+<td></td>
+<td>查看内存</td>
+<td>x /20xw 显示20个单元，16进制，4字节每单元</td>
+</tr>
+<tr>
+<td>watch</td>
+<td></td>
+<td>被设置观察点的变量发生修改时，打印显示</td>
+<td></td>
+</tr>
+<tr>
+<td>core file</td>
+<td></td>
+<td><code>ulimit -c 1024</code> 开启core文件， 调试时 <code>gdb a.out core</code></td>
+<td></td>
+</tr>
+<tr>
+<td>tui enable/disable</td>
+<td></td>
+<td>打开关闭tui界面</td>
+<td></td>
+</tr>
+<tr>
+<td>disas</td>
+<td></td>
+<td>反汇编当前函数</td>
+<td><code>disas foo</code> 反汇编函数foo</td>
+</tr>
+<tr>
+<td>info watch</td>
+<td>i watch</td>
+<td>显示观察点</td>
+<td></td>
+</tr>
+<tr>
+<td>info frame</td>
+<td></td>
+<td>有关栈帧的信息</td>
+<td></td>
+</tr>
+<tr>
+<td>info registers</td>
+<td></td>
+<td>所有寄存器的值</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>其他一些常用命令</p>
+<ul>
+<li><code>set disassembly-flavor intel</code>  转换为intel格式的汇编  </li>
+<li><code>set disassembly-flavor att</code> 转换为att格式的汇编  </li>
+<li><code>set solib-search-path &lt;path&gt;</code> 设置动态库路径</li>
+<li><code>set solib-absolute-prefix &lt;path&gt;</code> 设置绝对路径系统动态库路径</li>
+<li><code>layout asm</code> 显示汇编窗口</li>
+<li><code>layout regs</code> 显示寄存器窗口</li>
+<li><code>layout src</code> 显示源码窗口</li>
+</ul>
+<p>多线程调试</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">## 列出所有线程</span><br><span class="line">info threads</span><br><span class="line"></span><br><span class="line">## 切换线程(&lt;num&gt;根据上面命令列出的线程id选择)</span><br><span class="line">thread &lt;num&gt;</span><br><span class="line"></span><br><span class="line">## 查看所有线程的堆栈</span><br><span class="line">thread apply all bt</span><br><span class="line">thread name   [name]#为当前线程设置命名</span><br><span class="line">thread applay [command] # 为当前线程应用对应的命令</span><br><span class="line"></span><br><span class="line">## 查找符合描述的线程，查找条件一般按照线程命名查找，</span><br><span class="line">## Will display thread ids whose name, target ID, or extra info matches REGEXP</span><br><span class="line">thread find </span><br><span class="line"></span><br><span class="line">set scheduler-locking [ off | on | step]</span><br><span class="line">##off 不锁定任何线程， on表示只有当前被调试的线程继续执行, step 表示单步执行的时候，只有当前线程执行</span><br><span class="line">show scheduler-locking  # 查看设置</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>多进程调试</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">## 查看当前所有进程</span><br><span class="line">info inferiors</span><br><span class="line">## 切换进程</span><br><span class="line">inferiors &lt;num&gt;</span><br><span class="line"></span><br><span class="line">## 跟踪父进程还是子进程</span><br><span class="line">set follow-fork-mode [child | parent]</span><br><span class="line"></span><br><span class="line">## 调试某个进程时，是否断开对其他进程的调试</span><br><span class="line">set detach-on-fork [on | off]</span><br><span class="line"></span><br><span class="line">## 当gdb调用函数的时候，接收到信号的处理方式(默认停止栈帧)</span><br><span class="line">set unwindonsignal on</span><br></pre></td></tr></table></figure>
+
+
+
+<p>反向调试(gdb7.0以上)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">## 开启记录</span><br><span class="line">record</span><br><span class="line">## 关闭记录</span><br><span class="line">record stop</span><br><span class="line"></span><br><span class="line">## 反向单步</span><br><span class="line">reverse-step/reverse-stepi</span><br><span class="line"></span><br><span class="line">## 反向逐过程</span><br><span class="line">reverse-next/reverse-nexti</span><br><span class="line"></span><br><span class="line">## 反向运行到调用当前函数的地方</span><br><span class="line">reverse-finish</span><br><span class="line"></span><br><span class="line">## 设置程序运行方向，能够像正常调试方式一样反向调试</span><br><span class="line">set exec-direction [forward | reverse]</span><br><span class="line">## e.g. 设置了reverse就不用上面的reverse前缀了, n/s直接反向</span><br></pre></td></tr></table></figure>
+
+<p>断点的储存与恢复</p>
+<blockquote>
+<p>这个文件本质上存的是命令列表<br>同理，也可以将一些命令写入文件，用<code>source</code>命令加载<br>类似批处理  </p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">## 存储断点到文件</span><br><span class="line">save breakpoints mybreak.list</span><br><span class="line">## 从文件加载断点</span><br><span class="line">source mybreak.list</span><br></pre></td></tr></table></figure>
+
+
+<p>可以把一些设置写在 <code>~/.gdbinit</code> 中，以便让gdb下次启动时自动加载你的设置</p>
+<h3 id="gdb增强"><a href="#gdb增强" class="headerlink" title="gdb增强"></a>gdb增强</h3><p><code>gef</code> 是一组用于 <code>X86、ARM、MIPS、PowerPC</code> 和 <code>SPARC</code> 的命令集，可让 <code>GDB</code> 为漏洞利用开发人员提供更多更酷炫的功能。它主要由漏洞利用开发人员和逆向工程师使用，使用 Python API 为 GDB 提供附加功能，以协助动态分析和漏洞利用开发过程.</p>
+<p><code>gef</code> 的主要功能包括：</p>
+<ul>
+<li>一个<code>GDB</code> 脚本（用<code>python</code>写的，有1w多行代码）</li>
+<li>完全与操作系统无关，无依赖</li>
+<li>提供种类繁多的命令来彻底改变您在 <code>GDB</code> 中的体验。</li>
+<li>完整的<code>python3</code> 支持</li>
+<li>提供<code>GDB python API</code> 来自定义插件</li>
+</ul>
+<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p><code>gef</code> 是一个开箱即用的工具，可以通过下面命令通过脚本安装</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -c <span class="string">&quot;<span class="subst">$(curl -fsSL http://gef.blah.cat/sh)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>也可以通过<code>git</code>安装</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/hugsy/gef.git</span><br><span class="line"><span class="built_in">echo</span> <span class="built_in">source</span> `<span class="built_in">pwd</span>`/gef/gef.py &gt;&gt; ~/.gdbinit</span><br></pre></td></tr></table></figure>
+
+<p>为了更好的体验，可以安装一些依赖(可选)</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip3 install capstone unicorn keystone-engine ropper</span><br></pre></td></tr></table></figure>
+
+<p>只需确保您使用的<code>pip</code>是与编译 <code>GDB</code> 时所用的 <code>Python</code> 版本相对应的版本。</p>
+<h4 id="用户写基于gef的插件"><a href="#用户写基于gef的插件" class="headerlink" title="用户写基于gef的插件"></a>用户写基于gef的插件</h4><p><code>GEF</code> 的构建还为外部脚本提供了坚实的基础。该存储库<a target="_blank" rel="noopener" href="https://github.com/hugsy/gef-extras"><code>gef-extras</code></a>是一个开放的存储库，任何人都可以通过 <code>GEF</code> 的 <code>API</code> 自由提交自己的命令来扩展 <code>GDB</code>。</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## via the install script</span></span><br><span class="line">$ bash -c <span class="string">&quot;<span class="subst">$(wget https://github.com/hugsy/gef/raw/master/scripts/gef-extras.sh -O -)</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## manually</span></span><br><span class="line"><span class="comment">## clone the repo</span></span><br><span class="line">$ https://github.com/hugsy/gef-extras.git</span><br><span class="line"><span class="comment">## specify gef to load this directory</span></span><br><span class="line">$ gdb -ex <span class="string">&#x27;gef config gef.extra_plugins_dir &quot;/path/to/gef-extras/scripts&quot;&#x27;</span> -ex <span class="string">&#x27;gef save&#x27;</span> -ex quit</span><br><span class="line">[+] Configuration saved</span><br></pre></td></tr></table></figure>
+
+<h4 id="gef使用小技巧"><a href="#gef使用小技巧" class="headerlink" title="gef使用小技巧"></a>gef使用小技巧</h4><ol>
+<li>将输出重定向到一个tty</li>
+</ol>
+<p>若是从<code>tmux</code>会话中启动的<code>gdb</code>可以用下面命令 <a target="_blank" rel="noopener" href="https://hugsy.github.io/gef/commands/tmux-setup/">自动分屏指定tty</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(gdb) gef tmux-setup</span><br></pre></td></tr></table></figure>
+
+<p>更加通用的办法是 <a target="_blank" rel="noopener" href="https://hugsy.github.io/gef/commands/context/#redirecting-context-output-to-another-ttyfile">手工指定tty</a><br>首先开一个新终端并查看其<code>tty</code>号</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ tty</span><br><span class="line">/dev/pts/0</span><br></pre></td></tr></table></figure>
+
+<p>然后在配置<code>gef</code>的<code>context.redirect</code> 选项为上一步的输出结果</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gef➤ gef config context.redirect /dev/pts/0</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="RERFERENCES"><a href="#RERFERENCES" class="headerlink" title="RERFERENCES"></a>RERFERENCES</h3><p>[1] <a target="_blank" rel="noopener" href="https://hugsy.github.io/gef/">https://hugsy.github.io/gef/</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">wakaka</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://wakaka6.github.io/2022/09/20/gdb-usage/">https://wakaka6.github.io/2022/09/20/gdb-usage/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://wakaka6.github.io" target="_blank">wakaka</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/gdb/">gdb</a><a class="post-meta__tags" href="/tags/c/">c</a><a class="post-meta__tags" href="/tags/debug/">debug</a></div><div class="post_share"><div class="social-share" data-image="/img/page/3.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2022/09/20/special-gcc/"><img class="prev-cover" src="/img/page/3.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">特殊的gcc语法</div></div></a></div><div class="next-post pull-right"><a href="/2022/04/21/go-generic/"><img class="next-cover" src="/img/page/3.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">golang泛型机制</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2022/01/13/interProcessCommunication/" title="进程间通信相关系统调用"><img class="cover" src="/img/page/3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-13</div><div class="title">进程间通信相关系统调用</div></div></a></div><div><a href="/2022/01/15/signal/" title="linux信号总结"><img class="cover" src="/img/page/3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-15</div><div class="title">linux信号总结</div></div></a></div><div><a href="/2022/01/07/simple-webserver/" title="simple-webserver"><img class="cover" src="/img/page/3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-07</div><div class="title">simple-webserver</div></div></a></div><div><a href="/2021/12/27/socket-study/" title="socket_study"><img class="cover" src="/img/page/3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-12-27</div><div class="title">socket_study</div></div></a></div><div><a href="/2022/09/20/special-gcc/" title="特殊的gcc语法"><img class="cover" src="/img/page/3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-09-20</div><div class="title">特殊的gcc语法</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://avatars.githubusercontent.com/u/48764488" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">wakaka</div><div class="author-info__description">一个linux爱好者</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a></div><div class="card-info-data-item is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/wakaka6"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/wakaka6" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:48764488+wakaka6@users.noreply.github.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">Hello World.</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#GDB%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7"><span class="toc-number">1.</span> <span class="toc-text">GDB调试工具</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#0x00-%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.1.</span> <span class="toc-text">0x00 介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0x01-gdb%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8"><span class="toc-number">1.2.</span> <span class="toc-text">0x01 gdb简单使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#gdb%E5%A2%9E%E5%BC%BA"><span class="toc-number">1.3.</span> <span class="toc-text">gdb增强</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%89%E8%A3%85"><span class="toc-number">1.3.1.</span> <span class="toc-text">安装</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%A8%E6%88%B7%E5%86%99%E5%9F%BA%E4%BA%8Egef%E7%9A%84%E6%8F%92%E4%BB%B6"><span class="toc-number">1.3.2.</span> <span class="toc-text">用户写基于gef的插件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#gef%E4%BD%BF%E7%94%A8%E5%B0%8F%E6%8A%80%E5%B7%A7"><span class="toc-number">1.3.3.</span> <span class="toc-text">gef使用小技巧</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RERFERENCES"><span class="toc-number">1.4.</span> <span class="toc-text">RERFERENCES</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/09/20/special-gcc/" title="特殊的gcc语法">特殊的gcc语法</a><time datetime="2022-09-20T15:10:04.000Z" title="发表于 2022-09-20 23:10:04">2022-09-20</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/09/20/gdb-usage/" title="gdb使用技巧">gdb使用技巧</a><time datetime="2022-09-20T15:05:06.000Z" title="发表于 2022-09-20 23:05:06">2022-09-20</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/04/21/go-generic/" title="golang泛型机制">golang泛型机制</a><time datetime="2022-04-21T13:41:59.000Z" title="发表于 2022-04-21 21:41:59">2022-04-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/04/14/go-compile-envirtional-variable/" title="go编译相关环境变量">go编译相关环境变量</a><time datetime="2022-04-14T10:04:18.000Z" title="发表于 2022-04-14 18:04:18">2022-04-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2022/04/02/nmap/" title="nmap">nmap</a><time datetime="2022-04-02T14:06:43.000Z" title="发表于 2022-04-02 22:06:43">2022-04-02</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2022 By wakaka</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
